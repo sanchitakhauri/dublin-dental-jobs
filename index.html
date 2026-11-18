@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Find dental nurse, dental assistant and dentist vacancies in Dublin, Wicklow and Kildare. Tailor your CV privately on your device.">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; form-action 'none'">
+  <title>Dublin Dental Jobs | Vacancies &amp; private CV tools</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="alternate" href="data/openings.xml" type="application/rss+xml" title="Dublin Dental Jobs openings">
+  <link rel="stylesheet" href="assets/styles.css">
+  <script type="module" src="assets/site.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="header">
+    <div class="wrap header-inner">
+      <a class="brand" href="./">
+        <img src="assets/icon.svg" alt="" width="34" height="34">
+        Dublin Dental Jobs
+      </a>
+      <nav aria-label="Main">
+        <a href="#jobs">Vacancies</a>
+        <a href="#alerts">Alerts</a>
+        <a href="#cv">CV editor</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap" tabindex="-1">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow"><span class="dot"></span> Dental careers in Ireland</p>
+        <h1 id="page-title">Find your next<br> dental role.</h1>
+        <p class="hero-copy">Search dental nurse, dental assistant and dentist vacancies. Compare advertised pay, find roles close to Sandyford, and apply on the original site.</p>
+        <a class="button primary" href="#jobs">Browse vacancies <span aria-hidden="true">&darr;</span></a>
+      </div>
+      <aside class="coverage" aria-label="Counties covered">
+        <p class="eyebrow">Search area</p>
+        <ul role="list">
+          <li><span>Dublin</span><span class="county-tag">01</span></li>
+          <li><span>Wicklow</span><span class="county-tag">02</span></li>
+          <li><span>Kildare</span><span class="county-tag">03</span></li>
+        </ul>
+        <p>Distance estimates use the Sandyford area, not a home address.</p>
+      </aside>
+    </section>
+
+    <section id="jobs" class="section" aria-labelledby="jobs-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Job board</p>
+          <h2 id="jobs-title">Vacancies</h2>
+        </div>
+        <button id="refresh" type="button" class="button secondary" disabled>Refresh listings</button>
+      </div>
+      <div class="panel filters">
+        <label for="keyword">Search
+          <input type="search" id="keyword" placeholder="Job title, employer or town">
+        </label>
+        <label for="role">Role
+          <select id="role">
+            <option value="">All roles</option>
+            <option value="nurse">Dental nurse</option>
+            <option value="assistant">Dental assistant</option>
+            <option value="dentist">Dentist</option>
+          </select>
+        </label>
+        <label for="county">County
+          <select id="county">
+            <option value="">All counties</option>
+            <option>Dublin</option>
+            <option>Wicklow</option>
+            <option>Kildare</option>
+          </select>
+        </label>
+        <label for="sort">Sort by
+          <select id="sort">
+            <option value="newest">Newest first</option>
+            <option value="distance">Closest to Sandyford</option>
+            <option value="location">Location (A-Z)</option>
+            <option value="hourly">Highest advertised hourly pay</option>
+            <option value="annual">Highest advertised annual pay</option>
+          </select>
+        </label>
+      </div>
+      <p class="help">Distances are straight-line estimates, not journey times. Pay sorts use the highest stated figure for the selected period, with unknown pay last.</p>
+      <div class="results-bar">
+        <p id="results-count" role="status"></p>
+        <p id="feed-status" role="status">Loading the latest published listings&hellip;</p>
+      </div>
+      <div id="job-results"></div>
+      <noscript><p class="notice">Enable JavaScript for the vacancy list and CV editor. The original job sites below work without it.</p></noscript>
+      <details class="panel source-panel" id="sources" open>
+        <summary>More places to search</summary>
+        <p id="coverage-note">The board checks the PortmanDentex public feed. It does not cover every employer or vacancy. The sites below may have additional roles and alerts.</p>
+        <div class="links">
+          <a id="linkedin" href="https://www.linkedin.com/jobs/search/?keywords=dental&amp;location=Dublin%2C%20Ireland">LinkedIn jobs</a>
+          <a id="indeed" href="https://ie.indeed.com/jobs?q=dental&amp;l=Dublin">Indeed jobs</a>
+          <a href="https://www.hse.ie/eng/staff/jobs/job-search/">HSE vacancies</a>
+          <a href="https://careerhub.hse.ie/general-recruitment/">HSE job alerts</a>
+          <a href="https://jobsireland.ie/">JobsIreland</a>
+          <a href="https://www.irishdentaljobs.ie/jobs/professional-jobs.aspx">Irish Dental Jobs</a>
+          <a href="https://careers.trulydental.ie/jobs">Truly Dental</a>
+          <a href="https://www.dentalcareireland.ie/for-dentists/clinical-recruitment/">Dental Care Ireland</a>
+        </div>
+      </details>
+    </section>
+
+    <section id="alerts" class="section panel alert-panel" aria-labelledby="alert-title">
+      <div>
+        <p class="eyebrow">Job alerts</p>
+        <h2 id="alert-title">Hear about new openings</h2>
+        <p>Enable browser alerts to get a notification when this page detects new listings. For alerts when the page is closed, follow the RSS feed in a reader with notifications enabled, or set alerts on the original job sites.</p>
+      </div>
+      <div class="alert-actions">
+        <button id="alert-toggle" type="button" class="button primary" disabled>Enable browser alerts</button>
+        <a class="button secondary" href="data/openings.xml">Open RSS feed</a>
+        <p id="alert-status" class="help" role="status">Alerts are off.</p>
+      </div>
+    </section>
+
+    <section id="cv" class="section" aria-labelledby="cv-title">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Private workspace</p>
+          <h2 id="cv-title">Tailor your CV</h2>
+        </div>
+        <span class="pill">On-device only</span>
+      </div>
+      <p class="cv-intro">Import a text-based PDF or paste your CV. Review suggestions for the role you want, edit the draft, and download a copy. Nothing is uploaded or stored by the site; closing or reloading this page clears the draft.</p>
+      <div class="cv-grid">
+        <div class="panel editor">
+          <label for="cv-file">Import a CV (.pdf or .txt, up to 5 MB)</label>
+          <input type="file" id="cv-file" accept=".pdf,.txt,application/pdf,text/plain">
+          <p id="cv-status" role="status" class="help"></p>
+          <label for="cv-text">CV draft</label>
+          <textarea id="cv-text" rows="15" maxlength="60000" autocomplete="off" spellcheck="false" placeholder="Paste your CV or import it above, then edit the text here."></textarea>
+          <div class="editor-actions">
+            <button type="button" class="button primary" id="download" disabled>Download text</button>
+            <button type="button" class="button secondary" id="print" disabled>Print / save PDF</button>
+            <button type="button" class="button text-button" id="clear" disabled>Clear draft</button>
+          </div>
+        </div>
+        <div class="panel review">
+          <h3>CV suggestions</h3>
+          <label for="cv-role">Target role
+            <select id="cv-role">
+              <option value="support">Dental nurse / assistant</option>
+              <option value="dentist">Dentist</option>
+            </select>
+          </label>
+          <p class="help">Suggestions use the draft text. Only add details you can verify.</p>
+          <ul id="suggestions" role="list"></ul>
+          <div class="rule-note">
+            <h4>Check work rights and registration separately</h4>
+            <p>Stamp 1G may permit employee work without a separate employment permit, but does not permit self-employment. Check the conditions on your current permission and ask if an associate role is employment or self-employment.</p>
+            <p>Check your registration route before applying as a dentist. For nursing or assisting roles, check each employer's qualifications and scope of duties.</p>
+            <div class="links">
+              <a href="https://www.irishimmigration.ie/my-situation-has-changed-since-i-arrived-in-ireland/family-dependents/">Immigration Service Delivery</a>
+              <a href="https://www.dentalcouncil.ie/registration/dentists">Dental Council registration</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer"><div class="wrap">Dublin Dental Jobs <span>Independent vacancy finder</span></div></footer>
+  <article id="print-cv" aria-label="CV draft"></article>
+</body>
+</html>
