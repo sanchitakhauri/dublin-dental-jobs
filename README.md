@@ -2,6 +2,8 @@
 
 A public vacancy finder for dental nurses, dental assistants and dentists in Dublin, Wicklow and Kildare. It links to the official adverts; it does not accept applications.
 
+[Open the live Dublin Dental Jobs website](https://sanchitakhauri.github.io/dublin-dental-jobs/).
+
 The board imports active PortmanDentex vacancies from the [SmartRecruiters Posting API](https://developers.smartrecruiters.com/docs/posting-api). It publishes basic vacancy facts and links, not descriptions. Searches on LinkedIn, Indeed, HSE, JobsIreland and other employer sites are provided separately; those listings are not imported, and coverage is not comprehensive. Salary is shown only when the advert publishes an unambiguous EUR hourly or annual rate. Distance is a straight-line estimate from the Sandyford area to a known town centre, not a journey estimate.
 
 ## Run locally
