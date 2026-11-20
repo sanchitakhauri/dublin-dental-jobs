@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { areaFor, classifyRole, filterJobs, payLabel, safeHttps } from "../assets/jobs.mjs";
-import { reviewCV } from "../assets/cv-review.mjs";
+import { buildCVPrompt, detectCVTopics } from "../assets/cv-prompt.mjs";
 import { buildRSS, emptyCatalogue, extractPay, mergeCatalogue, normalizePosting } from "../scripts/catalogue.mjs";
 import { fetchJooble } from "../scripts/jooble.mjs";
 
@@ -173,13 +173,29 @@ test("independent feed failures preserve only the permitted fallback and removin
   assert.ok(!("jooble" in keyRemoved.sources));
 });
 
-test("role-specific CV suggestions do not add unverified credentials", () => {
-  assert.deepEqual(reviewCV(" ", "support"), []);
-  const support = reviewCV("BDS\nSkin Aesthetician\nSterilisation and patient records", "support");
-  assert.ok(support.some((item) => item.title.includes("aesthetics")));
-  assert.ok(support.some((item) => item.advice.includes("sterilisation") && item.advice.includes("clinical documentation")));
-  assert.equal(support.filter((item) => item.insert).length, 1);
-  const dentist = reviewCV("BDS\nWork authorisation: Stamp 1G", "dentist");
-  assert.ok(dentist.some((item) => item.title.includes("Council")));
-  assert.ok(dentist.every((item) => !item.insert));
+test("the CV prompt quotes the job details and prioritises topics present in both inputs", () => {
+  const prompt = buildCVPrompt("Dental Nurse\nDundrum\nChair-side assistance and patient care", {
+    topics: detectCVTopics("Example Candidate\nprivate@example.invalid\nChairside work, clinical notes, sterilisation"),
+  });
+  assert.match(prompt, /JOB PROFILE\n> Dental Nurse\n> Dundrum\n> Chair-side assistance/);
+  assert.match(prompt, /Check the attached CV for chairside assistance\. These are keyword matches/);
+  assert.match(prompt, /For this dental support role/);
+  assert.doesNotMatch(prompt, /Example Candidate|private@example\.invalid|clinical notes|sterilisation/);
+});
+
+test("replacing the CV updates the prompt, and the sample is not candidate evidence", () => {
+  const job = "Associate Dentist\nPrepare treatment plans";
+  const first = buildCVPrompt(job, { topics: detectCVTopics("Prepared treatment plans.") });
+  const replaced = buildCVPrompt(job, { topics: detectCVTopics("Wrote clinical notes.") });
+  assert.match(first, /Check the attached CV for dental assessment and treatment planning/);
+  assert.match(replaced, /Check the attached CV for clinical documentation and patient records/);
+  assert.doesNotMatch(replaced, /for dental assessment and treatment planning/);
+  assert.match(replaced, /Irish Dental Council registration/);
+  assert.match(replaced, /employment or self-employment/);
+
+  const sample = buildCVPrompt(job, { sample: true, topics: ["chairside", "private@example.invalid"] });
+  assert.match(sample, /fictional sample \(example topics: chairside assistance\).*Do not treat it as candidate evidence/);
+  assert.doesNotMatch(sample, /private@example\.invalid/);
+  assert.match(buildCVPrompt(job), /If there is no readable CV attached, ask me for it/);
+  assert.equal(buildCVPrompt(" \n ", { topics: ["records"] }), "");
 });

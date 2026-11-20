@@ -1,7 +1,8 @@
 import { filterJobs, locationLabel, payLabel, roleNames, safeHttps, sourceNames } from "./jobs.mjs";
-import { reviewCV } from "./cv-review.mjs";
+import { mountCVPrompt } from "./cv-prompt-form.mjs";
 
 const $ = (id) => document.getElementById(id);
+const selectPromptJob = mountCVPrompt();
 const make = (tag, text, className) => {
   const element = document.createElement(tag);
   if (text) element.textContent = text;
@@ -35,7 +36,7 @@ function saveSettings() {
   try {
     localStorage.setItem(settingsKey, JSON.stringify(settings));
   } catch {
-    // The CV is never persisted, and alerts can still work for this visit.
+    // Alerts can still work for this visit.
   }
 }
 
@@ -75,7 +76,7 @@ function renderJobs() {
     const date = Number.isFinite(timestamp) ? `${job.publishedAt ? "Posted" : "Updated"} ${prettyDate.format(timestamp)}` : "";
     const distance = Number.isFinite(job.distanceKm) ? `${job.distanceKm.toFixed(1)} km from Sandyford` : "";
     details.append(make("p", locationLabel(job)), make("p", [distance, date].filter(Boolean).join(" · ")), make("p", payLabel(job.pay), "job-pay"));
-    row.append(title, details);
+    const actions = make("div", null, "job-actions");
     const url = safeHttps(job.url);
     if (url) {
       const apply = make("a", viaJooble ? "View on Jooble ↗" : "View & apply ↗", "button primary");
@@ -85,8 +86,14 @@ function renderJobs() {
         : `View and apply for ${job.title} at ${job.employer} (opens original site)`);
       apply.target = "_blank";
       apply.rel = "noopener noreferrer";
-      row.append(apply);
+      actions.append(apply);
     }
+    const prompt = make("button", "CV prompt", "button secondary");
+    prompt.type = "button";
+    prompt.setAttribute("aria-label", `Build a CV prompt for ${job.title}`);
+    prompt.addEventListener("click", () => selectPromptJob(job));
+    actions.append(prompt);
+    row.append(title, details, actions);
     list.append(row);
   }
   $("job-results").replaceChildren(list);
@@ -220,116 +227,3 @@ window.addEventListener("focus", () => {
   renderAlerts();
   if (Date.now() - lastCheck > 60 * 1000) void loadJobs();
 });
-
-const draft = $("cv-text");
-const importFile = $("cv-file");
-const maxChars = draft.maxLength;
-
-function updateCV() {
-  const hasDraft = Boolean(draft.value.trim());
-  for (const id of ["download", "print", "clear"]) $(id).disabled = !hasDraft;
-  const suggestions = reviewCV(draft.value, $("cv-role").value);
-  const items = suggestions.map(({ title, advice, insert }) => {
-    const item = make("li");
-    item.append(make("h4", title), make("p", advice));
-    if (insert) {
-      const use = make("button", "Insert Stamp 1G line if accurate", "button secondary");
-      use.type = "button";
-      use.addEventListener("click", () => {
-        const lines = draft.value.trimStart().split("\n");
-        const gap = lines.findIndex((line) => !line.trim());
-        lines.splice(gap < 0 ? Math.min(3, lines.length) : gap, 0, insert);
-        const next = lines.join("\n");
-        if (next.length > maxChars) {
-          $("cv-status").textContent = "The draft is too long to add this line.";
-          return;
-        }
-        draft.value = next;
-        draft.focus();
-        $("cv-status").textContent = "Work-authorisation line added to your draft.";
-        updateCV();
-      });
-      item.append(use);
-    }
-    return item;
-  });
-  $("suggestions").replaceChildren(...(items.length ? items : [make("li", "Import or paste a CV to see suggestions.")]));
-}
-
-async function extractPDF(file) {
-  const pdfjs = await import("../vendor/pdf.mjs");
-  pdfjs.GlobalWorkerOptions.workerSrc = new URL("../vendor/pdf.worker.mjs", import.meta.url).href;
-  const task = pdfjs.getDocument({
-    data: new Uint8Array(await file.arrayBuffer()),
-    cMapUrl: new URL("../vendor/cmaps/", import.meta.url).href,
-    standardFontDataUrl: new URL("../vendor/standard_fonts/", import.meta.url).href,
-    cMapPacked: true, isEvalSupported: false, useWasm: false, useSystemFonts: false,
-  });
-  try {
-    const pdf = await task.promise;
-    if (pdf.numPages > 15) throw new Error("Use a PDF of 15 pages or fewer.");
-    const pages = [];
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      const page = await pdf.getPage(pageNum);
-      const { items } = await page.getTextContent();
-      pages.push(items.filter((item) => "str" in item).map((item) => `${item.str}${item.hasEOL ? "\n" : ""}`).join(""));
-    }
-    return pages.join("\n\n");
-  } finally {
-    await task.destroy();
-  }
-}
-
-draft.addEventListener("input", updateCV);
-$("cv-role").addEventListener("change", updateCV);
-importFile.addEventListener("change", async () => {
-  const file = importFile.files[0];
-  if (!file) return;
-  const originalDraft = draft.value;
-  importFile.disabled = true;
-  $("cv-status").textContent = "Reading file on this device…";
-  try {
-    if (file.size > 5 * 1024 * 1024) throw new Error("Use a file no larger than 5 MB.");
-    const text = (/\.pdf$/i.test(file.name)
-      ? await extractPDF(file)
-      : /\.txt$/i.test(file.name) ? await file.text() : "").trim();
-    if (!text) throw new Error("No text found. Use a text-based PDF or paste the CV text. Scanned images aren't supported.");
-    if (text.length > maxChars) throw new Error("This CV is too long. Try a shorter file.");
-    if (draft.value !== originalDraft) throw new Error("The CV changed while the file was loading. Your edits have been kept.");
-    if (originalDraft.trim() && !window.confirm("Replace your current draft with the imported text?")) {
-      $("cv-status").textContent = "Import cancelled. Your draft is unchanged.";
-      return;
-    }
-    draft.value = text;
-    $("cv-status").textContent = "CV text imported. Check spacing and line breaks before exporting.";
-    updateCV();
-  } catch (error) {
-    $("cv-status").textContent = error.name === "PasswordException"
-      ? "This PDF is password-protected. Use an unlocked copy or paste the text."
-      : `Import failed: ${error.message}`;
-  } finally {
-    importFile.value = "";
-    importFile.disabled = false;
-  }
-});
-
-$("download").addEventListener("click", () => {
-  const url = URL.createObjectURL(new Blob([draft.value], { type: "text/plain;charset=utf-8" }));
-  const link = make("a");
-  link.href = url;
-  link.download = "cv-draft.txt";
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-});
-$("print").addEventListener("click", () => {
-  $("print-cv").textContent = draft.value;
-  window.print();
-  $("print-cv").textContent = "";
-});
-$("clear").addEventListener("click", () => {
-  if (!window.confirm("Clear the CV draft from this page?")) return;
-  draft.value = "";
-  $("cv-status").textContent = "Draft cleared.";
-  updateCV();
-});
-updateCV();

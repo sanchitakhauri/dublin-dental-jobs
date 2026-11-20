@@ -30,6 +30,8 @@ Request a country-specific key from the [Jooble Ireland API portal](https://ie.j
 
 The connector makes three requests per refresh (one result page per county), filters to the board's roles and counties, and sends visitors to the Jooble link for each result. A normal hourly schedule makes 72 requests per day, excluding any extra runs, so check your key's [request limits](https://help.jooble.org/en/support/solutions/articles/60001448238-rest-api-documentation). Jooble results are displayed on the site, not included in its outgoing RSS feed. If the key is removed, the next publish drops Jooble results and keeps the PortmanDentex feed.
 
-## CV privacy
+## CV prompts
 
-Text-based PDFs and plain-text files are parsed in the browser using locally served PDF.js code. The CV is kept in page memory only. Suggestions are based on text and the selected role; they do not establish work rights or registration. CV downloads and print-to-PDF are local. Do not add CVs or personal details to this repository.
+Select **CV prompt** on a vacancy or paste an advert, then choose a text-based PDF or plain-text CV. The site uses the job details and broad CV topic matches to suggest a prompt. Choosing a replacement CV updates the prompt. Copy it into an AI chat and attach your real CV there yourself; the site does not send anything to an AI service.
+
+The [sample PDF](assets/sample-cv.pdf) is fictional. Real CVs are parsed on-device using locally served PDF.js and are never uploaded, saved as files, or copied into prompts. The optional browser setting remembers only a fixed set of broad topic IDs, not CV text or contact details. **Clear reference** removes those saved topics. Do not commit real CVs or personal details to this public repository.
