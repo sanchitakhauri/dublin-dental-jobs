@@ -1,5 +1,9 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { cataloguePath, employerFeed, emptyCatalogue, normalizePosting, readCatalogue, selectPosting } from "./catalogue.mjs";
+import {
+  cataloguePath, employerFeed, emptyCatalogue, mergeCatalogue, normalizePosting,
+  portmanCheckedAt, portmanSource, readCatalogue, selectPosting,
+} from "./catalogue.mjs";
+import { fetchJooble } from "./jooble.mjs";
 import { safeHttps } from "../assets/jobs.mjs";
 
 async function getJSON(url) {
@@ -39,35 +43,45 @@ async function fetchPostings() {
     }));
     jobs.push(...group);
   }
-  return jobs.sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "") || a.id.localeCompare(b.id));
+  return jobs;
 }
 
 async function previousCatalogue() {
   const local = await readCatalogue();
-  if (local.lastSuccessfulAt) return local;
+  if (Number.isFinite(Date.parse(portmanCheckedAt(local)))) return local;
   const site = safeHttps(process.env.SITE_URL);
   if (!site) return emptyCatalogue;
   try {
     const published = await getJSON(new URL("data/jobs.json", `${site.replace(/\/+$/, "")}/`));
-    if (Array.isArray(published.jobs) && Number.isFinite(Date.parse(published.lastSuccessfulAt))) return published;
-    console.warn("No previous successful catalogue at the site URL.");
+    if (Array.isArray(published.jobs) && Number.isFinite(Date.parse(portmanCheckedAt(published)))) return published;
+    console.warn("No previous PortmanDentex snapshot at the site URL.");
   } catch (error) {
     console.warn(`Could not load previous public catalogue: ${error.message}`);
   }
   return emptyCatalogue;
 }
 
-let catalogue;
-try {
-  const jobs = await fetchPostings();
-  catalogue = { status: "ok", lastSuccessfulAt: new Date().toISOString(), jobs };
-  console.log(`Fetched ${jobs.length} relevant live posting(s).`);
-} catch (error) {
-  const detail = error.cause?.code ? ` (${error.cause.code})` : "";
-  console.warn(`Could not refresh the employer source: ${error.message}${detail}`);
-  const previous = await previousCatalogue();
-  catalogue = { ...previous, status: previous.lastSuccessfulAt ? "stale" : "unavailable" };
-  console.warn(previous.lastSuccessfulAt ? "Publishing the last successful data as stale." : "Publishing availability status without listings.");
+const feeds = [[portmanSource, fetchPostings]];
+const joobleKey = process.env.JOOBLE_IE_API_KEY?.trim();
+if (joobleKey) feeds.push(["jooble", () => fetchJooble(joobleKey)]);
+
+const results = await Promise.all(feeds.map(async ([source, fetchJobs]) => {
+  try {
+    const postings = await fetchJobs();
+    console.log(`${source}: fetched ${postings.length} relevant posting(s) before deduplication.`);
+    return { source, postings };
+  } catch (error) {
+    const detail = error.cause?.code ? ` (${error.cause.code})` : "";
+    console.warn(`Could not refresh ${source}: ${error.message}${detail}`);
+    return { source, postings: null };
+  }
+}));
+
+const previous = results.some(({ source, postings }) => source === portmanSource && postings === null)
+  ? await previousCatalogue() : emptyCatalogue;
+const catalogue = mergeCatalogue(results, previous, new Date().toISOString());
+for (const [source, feed] of Object.entries(catalogue.sources)) {
+  if (feed.status === "stale") console.warn(`${source}: publishing last successful data as stale.`);
 }
 
 await mkdir(new URL("./", cataloguePath), { recursive: true });

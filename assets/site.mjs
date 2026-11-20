@@ -1,4 +1,4 @@
-import { filterJobs, locationLabel, payLabel, roleNames, safeHttps } from "./jobs.mjs";
+import { filterJobs, locationLabel, payLabel, roleNames, safeHttps, sourceNames } from "./jobs.mjs";
 import { reviewCV } from "./cv-review.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -45,7 +45,7 @@ function jobFilters() {
 
 function renderJobs() {
   const filters = jobFilters();
-  const location = `${filters.county || "Dublin"}, Ireland`;
+  const location = filters.county ? `${filters.county}, Ireland` : "Ireland";
   const keywords = roleNames[filters.role] || "Dental";
   $("linkedin").href = `https://www.linkedin.com/jobs/search/?${new URLSearchParams({ keywords, location })}`;
   $("indeed").href = `https://ie.indeed.com/jobs?${new URLSearchParams({ q: keywords, l: location })}`;
@@ -56,7 +56,7 @@ function renderJobs() {
     const message = snapshot?.jobs.length
       ? "No listings match these filters. Try another role or county."
       : snapshot?.status === "ok"
-        ? "No matching vacancies in the connected feed. Try the other job sites below."
+        ? "No matching vacancies from the connected sources. Try the other job sites below."
         : "There are no verified listings to show right now. Use the job sites below to search directly.";
     $("job-results").replaceChildren(make("p", message, "notice"));
     return;
@@ -67,17 +67,22 @@ function renderJobs() {
   for (const job of results) {
     const row = make("li", null, "panel job-row");
     const title = make("div", null, "job-title");
-    title.append(make("span", roleNames[job.role], "pill"), make("h3", job.title), make("p", job.employer));
+    const viaJooble = job.source === "jooble";
+    const attribution = viaJooble ? `${job.employer} · Via Jooble` : job.employer;
+    title.append(make("span", roleNames[job.role], "pill"), make("h3", job.title), make("p", attribution));
     const details = make("div");
-    const date = Number.isFinite(Date.parse(job.publishedAt)) ? `Posted ${prettyDate.format(new Date(job.publishedAt))}` : "";
+    const timestamp = Date.parse(job.publishedAt ?? job.updatedAt);
+    const date = Number.isFinite(timestamp) ? `${job.publishedAt ? "Posted" : "Updated"} ${prettyDate.format(timestamp)}` : "";
     const distance = Number.isFinite(job.distanceKm) ? `${job.distanceKm.toFixed(1)} km from Sandyford` : "";
     details.append(make("p", locationLabel(job)), make("p", [distance, date].filter(Boolean).join(" · ")), make("p", payLabel(job.pay), "job-pay"));
     row.append(title, details);
     const url = safeHttps(job.url);
     if (url) {
-      const apply = make("a", "View & apply ↗", "button primary");
+      const apply = make("a", viaJooble ? "View on Jooble ↗" : "View & apply ↗", "button primary");
       apply.href = url;
-      apply.setAttribute("aria-label", `View and apply for ${job.title} at ${job.employer} (opens original site)`);
+      apply.setAttribute("aria-label", viaJooble
+        ? `View ${job.title} on Jooble`
+        : `View and apply for ${job.title} at ${job.employer} (opens original site)`);
       apply.target = "_blank";
       apply.rel = "noopener noreferrer";
       row.append(apply);
@@ -142,25 +147,31 @@ async function loadJobs() {
     });
     if (!response.ok) throw new Error(`Board returned HTTP ${response.status}`);
     const data = await response.json();
-    if (!Array.isArray(data.jobs) || !["ok", "stale", "unavailable"].includes(data.status)) {
+    if (!Array.isArray(data.jobs) || !["ok", "partial", "stale", "unavailable"].includes(data.status)) {
       throw new Error("Board data is incomplete");
     }
     snapshot = data;
-    const timestamp = Date.parse(data.lastSuccessfulAt);
-    const lastSuccess = Number.isFinite(timestamp) ? prettyTime.format(timestamp) : null;
-    const outOfDate = !lastSuccess || Date.now() - timestamp > 3 * 60 * 60 * 1000;
-    $("feed-status").textContent = data.status === "ok" && !outOfDate
-      ? `Source checked ${lastSuccess} (Ireland time)`
-      : lastSuccess
-        ? `Feed may be out of date. Last successful check: ${lastSuccess} (Ireland time).`
-        : "The source feed is unavailable. Try the original job sites below.";
+    const fresh = new Set();
+    const statuses = Object.entries(data.sources ?? { portmandentex: data }).map(([source, feed]) => {
+      const label = Object.hasOwn(sourceNames, source) ? sourceNames[source] : source;
+      const timestamp = Date.parse(feed.lastSuccessfulAt);
+      if (!Number.isFinite(timestamp)) return `${label}: unavailable`;
+      const date = `${prettyTime.format(timestamp)} (Ireland time)`;
+      if (feed.status !== "ok" || Date.now() - timestamp > 3 * 60 * 60 * 1000) {
+        return `${label}: may be out of date (last checked ${date})`;
+      }
+      fresh.add(source);
+      return `${label}: checked ${date}`;
+    });
+    $("feed-status").textContent = statuses.join(" · ");
     renderJobs();
 
-    if (data.status === "ok" && !outOfDate) {
+    if (fresh.size) {
       readSettings();
+      const checkedJobs = data.jobs.filter((job) => fresh.has(job.source ?? "portmandentex"));
       const previous = new Set(settings.seen || []);
-      const newJobs = settings.seen === null ? [] : data.jobs.filter((job) => !previous.has(job.id));
-      settings.seen = [...new Set([...data.jobs.map((job) => job.id), ...previous])].slice(0, 1000);
+      const newJobs = settings.seen === null ? [] : checkedJobs.filter((job) => !previous.has(job.id));
+      settings.seen = [...new Set([...checkedJobs.map((job) => job.id), ...previous])].slice(0, 1000);
       saveSettings();
       void notifyAbout(newJobs);
     }

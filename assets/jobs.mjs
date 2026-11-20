@@ -4,6 +4,11 @@ export const roleNames = {
   dentist: "Dentist",
 };
 
+export const sourceNames = {
+  portmandentex: "PortmanDentex",
+  jooble: "Jooble Ireland",
+};
+
 const english = new Intl.Collator("en-IE", { sensitivity: "base" });
 const eur = new Intl.NumberFormat("en-IE", {
   style: "currency", currency: "EUR", maximumFractionDigits: 2, minimumFractionDigits: 0,
@@ -117,7 +122,7 @@ export function filterJobs(jobs, { keyword, role, county, sort }) {
       const byPay = amount(b) - amount(a);
       if (byPay) return byPay;
     }
-    return (Date.parse(b.publishedAt) || 0) - (Date.parse(a.publishedAt) || 0)
+    return (Date.parse(b.publishedAt ?? b.updatedAt) || 0) - (Date.parse(a.publishedAt ?? a.updatedAt) || 0)
       || english.compare(a.title, b.title) || english.compare(a.id, b.id);
   });
 }
