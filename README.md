@@ -20,7 +20,9 @@ Open `http://127.0.0.1:8000`. If the PortmanDentex feed fails, refresh marks its
 
 ## Hosting and alerts
 
-On GitHub Pages, select **GitHub Actions** as the publishing source. To publish manually, open **Actions → Refresh dental jobs and publish site → Run workflow**. After you are ready for automatic refresh and deployment, add the Actions repository variable `PUBLISH_DENTAL_JOBS` with the value `true` under **Settings → Secrets and variables → Actions → Variables**. That enables the job on pushes to `main` and on its hourly schedule. The page's refresh button reads the latest published snapshot; it does not trigger a cloud job. GitHub may delay scheduled runs or pause them after repository inactivity.
+On GitHub Pages, select **GitHub Actions** as the publishing source. To publish manually, open **Actions → Refresh dental jobs and publish site → Run workflow** and select `main`. Selecting a branch with the verification job instead runs tests, refreshes the feeds, and builds without deploying. Check the `npm run refresh` log for each source's result; the site can build even if a source is unavailable.
+
+After you are ready for automatic refresh and deployment, add the Actions repository variable `PUBLISH_DENTAL_JOBS` with the value `true` under **Settings → Secrets and variables → Actions → Variables**. That enables the job on pushes to `main` and on its hourly schedule. The page's refresh button reads the latest published snapshot; it does not trigger a cloud job. GitHub may delay scheduled runs or pause them after repository inactivity.
 
 Browser alerts are opt-in and check for additions every five minutes while the page is open. To get PortmanDentex alerts when the page is closed, follow `data/openings.xml` in a reader that supports notifications. Other job sites may offer their own alerts. No email addresses or subscriptions are collected by this site.
 
@@ -29,9 +31,3 @@ Browser alerts are opt-in and check for additions every five minutes while the p
 Request a country-specific key from the [Jooble Ireland API portal](https://ie.jooble.org/api/about). Check that your API agreement allows publishing a periodically refreshed snapshot on a public site. In the repository, go to **Settings → Secrets and variables → Actions → New repository secret** and save the key as `JOOBLE_IE_API_KEY`. Run the publishing workflow to activate it. For local refreshes, supply the same variable through your environment. Do not commit the key or put it in a repository variable.
 
 The connector makes three requests per refresh (one result page per county), filters to the board's roles and counties, and sends visitors to the Jooble link for each result. A normal hourly schedule makes 72 requests per day, excluding any extra runs, so check your key's [request limits](https://help.jooble.org/en/support/solutions/articles/60001448238-rest-api-documentation). Jooble results are displayed on the site, not included in its outgoing RSS feed. If the key is removed, the next publish drops Jooble results and keeps the PortmanDentex feed.
-
-## CV prompts
-
-Select **CV prompt** on a vacancy or paste an advert, then choose a text-based PDF or plain-text CV. The site uses the job details and broad CV topic matches to suggest a prompt. Choosing a replacement CV updates the prompt. Copy it into an AI chat and attach your real CV there yourself; the site does not send anything to an AI service.
-
-The [sample PDF](assets/sample-cv.pdf) is fictional. Real CVs are parsed on-device using locally served PDF.js and are never uploaded, saved as files, or copied into prompts. The optional browser setting remembers only a fixed set of broad topic IDs, not CV text or contact details. **Clear reference** removes those saved topics. Do not commit real CVs or personal details to this public repository.

@@ -9,18 +9,36 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: dental-jobs-pages
+  group: dental-jobs-${{ github.ref == 'refs/heads/main' && 'pages' || github.ref }}
   cancel-in-progress: false
 
 jobs:
-  publish:
-    if: github.event_name == 'workflow_dispatch' || vars.PUBLISH_DENTAL_JOBS == 'true'
+  verify:
+    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npm run refresh
+        env:
+          JOOBLE_IE_API_KEY: ${{ secrets.JOOBLE_IE_API_KEY }}
+      - run: npm run build
+
+  publish:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || vars.PUBLISH_DENTAL_JOBS == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}

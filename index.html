@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Find dental nurse, dental assistant and dentist vacancies in Dublin, Wicklow and Kildare. Build a tailored CV prompt from a vacancy and your CV.">
+  <meta name="description" content="Find dental nurse, dental assistant and dentist vacancies in Dublin, Wicklow and Kildare, and follow the original listings to apply.">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; form-action 'none'">
-  <title>Dublin Dental Jobs | Vacancies &amp; CV prompts</title>
+  <title>Dublin Dental Jobs | Vacancies</title>
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="alternate" href="data/openings.xml" type="application/rss+xml" title="Dublin Dental Jobs openings">
   <link rel="stylesheet" href="assets/styles.css">
@@ -23,7 +23,6 @@
       <nav aria-label="Main">
         <a href="#jobs">Vacancies</a>
         <a href="#alerts">Alerts</a>
-        <a href="#cv">CV prompts</a>
       </nav>
     </div>
   </header>
@@ -91,7 +90,7 @@
         <p id="feed-status" role="status">Loading the latest published listings&hellip;</p>
       </div>
       <div id="job-results"></div>
-      <noscript><p class="notice">Enable JavaScript for vacancies and CV prompts. The original job sites below work without it.</p></noscript>
+      <noscript><p class="notice">Enable JavaScript to see the latest vacancies. The original job sites below work without it.</p></noscript>
       <details class="panel source-panel" id="sources" open>
         <summary>More places to search</summary>
         <p>The automatic list covers only connected sources. Search other sites separately for more vacancies. LinkedIn and Indeed open with your selected role and county (all of Ireland if no county is selected).</p>
@@ -121,44 +120,6 @@
         <button id="alert-toggle" type="button" class="button primary" disabled>Enable browser alerts</button>
         <a class="button secondary" href="data/openings.xml">Open RSS feed</a>
         <p id="alert-status" class="help" role="status">Alerts are off.</p>
-      </div>
-    </section>
-
-    <section id="cv" class="section" aria-labelledby="cv-title">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Application helper</p>
-          <h2 id="cv-title" tabindex="-1">Build a tailored CV prompt</h2>
-        </div>
-        <span class="pill">CV stays on-device</span>
-      </div>
-      <p class="cv-intro">Choose a vacancy with <strong>CV prompt</strong> or paste an advert below. Use your CV as a private reference, then copy the suggested prompt into the AI chat of your choice.</p>
-      <div class="cv-grid">
-        <div class="panel prompt-panel">
-          <label for="job-profile">Job title and requirements</label>
-          <textarea id="job-profile" rows="7" maxlength="10000" autocomplete="off" aria-describedby="job-profile-help" placeholder="Job title on the first line, followed by the advert's key requirements"></textarea>
-          <p id="job-profile-help" class="help">Vacancy buttons fill in basic job details. Add requirements from the advert for a more specific prompt.</p>
-          <div class="cv-reference">
-            <label for="cv-reference">Choose or replace your CV (.pdf or .txt, up to 5 MB)</label>
-            <input type="file" id="cv-reference" accept=".pdf,.txt,application/pdf,text/plain" aria-describedby="cv-reference-status">
-            <label class="remember-topics"><input type="checkbox" id="cv-remember" disabled> Remember only matching topics in this browser</label>
-            <div class="prompt-actions">
-              <button type="button" class="button secondary" id="cv-sample">Try fictional sample</button>
-              <a class="button secondary" href="assets/sample-cv.pdf" download>Sample PDF</a>
-              <button type="button" class="button text-button" id="cv-clear" disabled>Clear reference</button>
-            </div>
-            <p id="cv-reference-status" role="status" class="help">No CV reference selected. You can still build a prompt.</p>
-          </div>
-        </div>
-        <div class="panel prompt-panel">
-          <label for="cv-prompt">Suggested prompt</label>
-          <textarea id="cv-prompt" rows="14" readonly spellcheck="false" aria-describedby="prompt-help" placeholder="Select a vacancy or enter job details to get a prompt"></textarea>
-          <p id="prompt-help" class="help">Copy the prompt, then attach your real CV in the AI chat yourself. The prompt includes the job details and broad topic matches, not the CV file or its text.</p>
-          <div class="prompt-actions">
-            <button type="button" class="button primary" id="copy-prompt" disabled>Copy prompt</button>
-          </div>
-          <p id="copy-status" role="status" class="help"></p>
-        </div>
       </div>
     </section>
   </main>
