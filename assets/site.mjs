@@ -1,8 +1,6 @@
 import { filterJobs, locationLabel, payLabel, roleNames, safeHttps, sourceNames } from "./jobs.mjs";
-import { mountCVPrompt } from "./cv-prompt-form.mjs";
 
 const $ = (id) => document.getElementById(id);
-const selectPromptJob = mountCVPrompt();
 const make = (tag, text, className) => {
   const element = document.createElement(tag);
   if (text) element.textContent = text;
@@ -88,11 +86,6 @@ function renderJobs() {
       apply.rel = "noopener noreferrer";
       actions.append(apply);
     }
-    const prompt = make("button", "CV prompt", "button secondary");
-    prompt.type = "button";
-    prompt.setAttribute("aria-label", `Build a CV prompt for ${job.title}`);
-    prompt.addEventListener("click", () => selectPromptJob(job));
-    actions.append(prompt);
     row.append(title, details, actions);
     list.append(row);
   }
